@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zagadka: Morse → GA-DE-RY-PO-LU-KI</title>
+  <title>Zagadka ZHR</title>
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f1221;
-      color: #e7e9ff;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: #fff;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -17,49 +17,77 @@
       padding: 20px;
     }
     .card {
-      background: #161a2f;
-      border-radius: 16px;
-      padding: 24px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      padding: 32px;
       max-width: 900px;
       width: 100%;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      box-shadow: 0 8px 30px rgba(0,0,0,.4);
+      text-align: center;
+      animation: fadeIn 1s ease;
     }
-    h1 { margin-top: 0; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+    p {
+      color: #d0d6f5;
+    }
     pre {
-      background: rgba(255,255,255,.05);
-      padding: 12px;
-      border-radius: 8px;
+      background: rgba(0,0,0,.4);
+      padding: 16px;
+      border-radius: 12px;
       overflow-x: auto;
       font-family: monospace;
-      font-size: 15px;
+      font-size: 16px;
+      margin: 20px 0;
+      color: #aee1ff;
     }
     input {
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #555;
-      background: #222;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,.15);
       color: #fff;
-      width: 200px;
+      width: 220px;
+      font-size: 16px;
+      margin-top: 10px;
     }
     button {
-      padding: 10px 16px;
-      margin-left: 8px;
+      padding: 12px 20px;
+      margin-left: 10px;
       border: none;
-      border-radius: 8px;
-      background: #6c8cff;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6c8cff, #4a6ee0);
       color: white;
       cursor: pointer;
       font-weight: bold;
+      font-size: 15px;
+      transition: transform .15s ease, box-shadow .15s ease;
     }
-    .msg { margin-top: 10px; font-weight: bold; }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,.3);
+    }
+    .msg { margin-top: 15px; font-weight: bold; font-size: 16px; }
     .ok { color: #2ecc71; }
     .no { color: #ff5c7a; }
+    #qrSection { margin-top: 25px; display: none; }
+    #qrcode { margin: 0 auto 12px; }
+    #qrSection p { color: #fff; font-style: italic; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Zaszyfrowane pytanie</h1>
-    <p>Odszyfruj najpierw Morse’a (litery = „/”, słowa = „//”), a potem użyj szyfru GA-DE-RY-PO-LU-KI.</p>
+    <h1>🔐 Zaszyfrowane pytanie</h1>
+    <p>Najpierw odszyfruj Morse’a (litery = „/”, słowa = „//”), potem użyj szyfru GA-DE-RY-PO-LU-KI.</p>
     <pre id="cipher"></pre>
 
     <div>
@@ -67,6 +95,11 @@
       <button id="sprawdz">Sprawdź</button>
     </div>
     <div class="msg" id="komunikat"></div>
+
+    <div id="qrSection">
+      <div id="qrcode"></div>
+      <p>📸 Link do zdjęć znajdziesz w starym poście z pielgrzymki ZHR.</p>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
@@ -74,8 +107,9 @@
     // ===== KONFIG =====
     const PYTANIE_ORG = "Która to była pielgrzymka ZHR?";
     const POPRAWNE = ["43"];
-    const MSG_OK = "Brawo! To poprawna odpowiedź: 43 🎉";
+    const MSG_OK = "Brawo! To poprawna odpowiedź 🎉";
     const MSG_NO = "Nie tym razem. Spróbuj jeszcze raz.";
+    const QR_TRESC = "https://twoj-link-do-zdjec.pl"; // <- PODMIEŃ na właściwy link
 
     // ===== FUNKCJE =====
     const stripDiacritics = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -117,11 +151,25 @@
     // ===== SPRAWDZANIE ODPOWIEDZI =====
     const input = document.getElementById("odpowiedz");
     const msg = document.getElementById("komunikat");
+    const qrSection = document.getElementById("qrSection");
+
     document.getElementById("sprawdz").addEventListener("click", () => {
       const val = input.value.trim();
       if (POPRAWNE.includes(val)) {
         msg.textContent = MSG_OK;
         msg.className = "msg ok";
+        qrSection.style.display = "block";
+        if (!qrSection.dataset.generated) {
+          new QRCode(document.getElementById("qrcode"), {
+            text: QR_TRESC,
+            width: 200,
+            height: 200,
+            colorDark: "#ffffff",
+            colorLight: "#161a2f",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+          qrSection.dataset.generated = "true";
+        }
       } else {
         msg.textContent = MSG_NO;
         msg.className = "msg no";
