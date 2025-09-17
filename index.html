@@ -15,14 +15,14 @@
       align-items: center;
       min-height: 100vh;
       padding: 20px;
-      overflow-x: hidden; /* brak przewijania w bok */
+      overflow-x: hidden;
     }
     .card {
       background: rgba(255,255,255,0.08);
       backdrop-filter: blur(12px);
       border-radius: 20px;
       padding: 24px;
-      max-width: 100%; /* dopasowanie do ekranu */
+      max-width: 100%;
       box-shadow: 0 8px 30px rgba(0,0,0,.4);
       text-align: center;
     }
@@ -37,8 +37,8 @@
       margin: 16px 0;
       color: #aee1ff;
       text-align: left;
-      white-space: pre-wrap;   /* zawijanie */
-      word-wrap: break-word;   /* łamanie */
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
     .controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
     input {
@@ -92,7 +92,20 @@
     Tu <a href="https://www.instagram.com/pielgrzymkazhr/" target="_blank" rel="noopener noreferrer">Instagram pielgrzymki</a>`;
 
     // ===== FUNKCJE =====
-    const stripDiacritics = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    function normalizePolish(text) {
+      return text
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/ł/g,"l").replace(/Ł/g,"L")
+        .replace(/ą/g,"a").replace(/Ą/g,"A")
+        .replace(/ę/g,"e").replace(/Ę/g,"E")
+        .replace(/ś/g,"s").replace(/Ś/g,"S")
+        .replace(/ć/g,"c").replace(/Ć/g,"C")
+        .replace(/ń/g,"n").replace(/Ń/g,"N")
+        .replace(/ó/g,"o").replace(/Ó/g,"O")
+        .replace(/ż/g,"z").replace(/Ż/g,"Z")
+        .replace(/ź/g,"z").replace(/Ź/g,"Z");
+    }
+
     const GADERY = { G:"A", A:"G", D:"E", E:"D", R:"Y", Y:"R", P:"O", O:"P", L:"U", U:"L", K:"I", I:"K" };
     const applyGadery = s => s.split("").map(ch => {
       const up = ch.toUpperCase();
@@ -112,22 +125,22 @@
       "?":"..--.."
     };
 
-    const toMorse = s => {
-      return s.split(" ").map(word =>
+    function toMorse(text) {
+      return text.split(" ").map(word =>
         word.split("").map(ch => {
           const up = ch.toUpperCase();
           return MORSE[up] || "";
         }).filter(Boolean).join(" / ")
       ).join(" // ");
-    };
+    }
 
-    // Generowanie zagadki
-    const pytanieBase = stripDiacritics(PYTANIE_ORG);
+    // ===== Generowanie zagadki =====
+    const pytanieBase = normalizePolish(PYTANIE_ORG);
     const poGadery = applyGadery(pytanieBase);
     const morseFinal = toMorse(poGadery);
     document.getElementById("cipher").textContent = morseFinal;
 
-    // Sprawdzanie odpowiedzi
+    // ===== Sprawdzanie odpowiedzi =====
     const input = document.getElementById("odpowiedz");
     const msg = document.getElementById("komunikat");
 
