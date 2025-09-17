@@ -77,7 +77,8 @@
           <p>Odszyfruj najpierw Morse’a, potem GA-DE-RY-PO-LU-KI. Wynik to pytanie.</p>
           <pre id="cipher" class="mono" aria-label="Tekst zagadki"></pre>
           <div class="hint" id="podpowiedz">
-            Podpowiedź: Kolejność odszyfrowania to: Morse → GA-DE-RY-PO-LU-KI. Polskie znaki są bez ogonków, spacje = /.
+            Podpowiedź: Kolejność odszyfrowania to: Morse → GA-DE-RY-PO-LU-KI.  
+            Litery oddzielone są jednym „/”, słowa dwoma „//”.
           </div>
         </div>
 
@@ -99,100 +100,22 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" crossorigin="anonymous"></script>
   <script>
     // ===== KONFIG =====
-    // Co ma zawierać QR (podmień na swój link / wiadomość):
     const QR_TRESC = "https://przyklad.pl/nagroda"; // <- PODMIEŃ
-
-    // Pytanie (źródło) – z polskimi znakami, jak w poleceniu:
     const PYTANIE_ORG = "Która to była pielgrzymka ZHR?";
-
-    // Poprawna odpowiedź:
     const POPRAWNE = ["43"];
-
-    // Komunikaty:
     const MSG_OK = "Brawo! To poprawna odpowiedź: 43. Zeskanuj teraz kod QR.";
     const MSG_NO = "Nie tym razem. Spróbuj jeszcze raz.";
 
     // ===== LOGIKA SZYFROWANIA =====
-    // Usuwanie polskich znaków
     const stripDiacritics = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    // Szyfr GA-DE-RY-PO-LU-KI (dwukierunkowo)
     const GADERY = { G:"A", A:"G", D:"E", E:"D", R:"Y", Y:"R", P:"O", O:"P", L:"U", U:"L", K:"I", I:"K" };
-    const applyGadery = s => {
-      return s.split("").map(ch => {
-        const up = ch.toUpperCase();
-        if (GADERY[up]) {
-          const mapped = GADERY[up];
-          // zachowaj oryginalną wielkość (prosto: wielkie = wielkie, małe = małe)
-          return (ch === ch.toUpperCase()) ? mapped : mapped.toLowerCase();
-        }
-        return ch;
-      }).join("");
-    };
-
-    // Alfabet Morse'a (A-Z, 0-9, znak zapytania)
-    const MORSE = {
-      "A":".-", "B":"-...", "C":"-.-.", "D":"-..", "E":".", "F":"..-.", "G":"--.", "H":"....", "I":"..", "J":".---",
-      "K":"-.-", "L":".-..", "M":"--", "N":"-.", "O":"---", "P":".--.", "Q":"--.-", "R":".-.", "S":"...", "T":"-",
-      "U":"..-", "V":"...-", "W":".--", "X":"-..-", "Y":"-.--", "Z":"--..",
-      "0":"-----", "1":".----", "2":"..---", "3":"...--", "4":"....-", "5":".....",
-      "6":"-....", "7":"--...", "8":"---..", "9":"----.",
-      "?":"..--.."
-    };
-    const toMorse = s => {
-      return s.split(" ").map(word =>
-        word.split("").map(ch => {
-          const up = ch.toUpperCase();
-          return MORSE[up] || ""; // pomiń nieobsługiwane znaki
-        }).filter(Boolean).join(" ")
-      ).join(" / ");
-    };
-
-    // Szyfrujemy tak, by rozwiązujący musiał odszyfrować w kolejności: Morse -> GA-DE-RY-PO-LU-KI.
-    // To znaczy: najpierw kodujemy GA-DE-RY-PO-LU-KI, a wynik zamieniamy na Morse'a.
-    const pytanieBase = stripDiacritics(PYTANIE_ORG);
-    const poGadery = applyGadery(pytanieBase);
-    const morseFinal = toMorse(poGadery);
-
-    // Wstaw zagadkę
-    document.getElementById("cipher").textContent = morseFinal;
-
-    // ===== QR =====
-    const qrelem = document.getElementById("qrcode");
-    const qr = new QRCode(qrelem, {
-      text: QR_TRESC, width: 260, height: 260,
-      colorDark: "#ffffff", colorLight: "#161a2f",
-      correctLevel: QRCode.CorrectLevel.M
-    });
-
-    // ===== SPRAWDZANIE ODPOWIEDZI =====
-    const input = document.getElementById("odpowiedz");
-    const msg = document.getElementById("komunikat");
-    const btn = document.getElementById("sprawdz");
-    const hintBtn = document.getElementById("pokazHint");
-    const hint = document.getElementById("podpowiedz");
-
-    function normalize(s){
-      return (s || "").toString().trim().replace(",", "."); // lekkie ułatwienie
-    }
-
-    function sprawdz(){
-      const val = normalize(input.value);
-      const jestOk = POPRAWNE.includes(val);
-      msg.textContent = jestOk ? MSG_OK : MSG_NO;
-      msg.className = "msg " + (jestOk ? "ok" : "no");
-      if (jestOk) {
-        qrelem.animate([{ transform:"scale(1)" }, { transform:"scale(1.04)" }, { transform:"scale(1)" }], { duration:280, easing:"ease-out" });
+    const applyGadery = s => s.split("").map(ch => {
+      const up = ch.toUpperCase();
+      if (GADERY[up]) {
+        const mapped = GADERY[up];
+        return (ch === ch.toUpperCase()) ? mapped : mapped.toLowerCase();
       }
-    }
+      return ch;
+    }).join("");
 
-    btn.addEventListener("click", sprawdz);
-    input.addEventListener("keydown", (e) => { if (e.key === "Enter") sprawdz(); });
-    hintBtn.addEventListener("click", () => {
-      const visible = hint.style.display === "block";
-      hint.style.display = visible ? "none" : "block";
-      hintBtn.textContent = visible ? "Pokaż podpowiedź" : "Ukryj podpowiedź";
-    });
-  </script>
-</body>
-</html>
+    const
