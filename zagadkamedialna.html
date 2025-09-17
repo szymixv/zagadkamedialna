@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zagadka: Morse → GA-DE-RY-PO-LU-KI</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <style>
+    :root {
+      --bg: #0f1221; --card: #161a2f; --text: #e7e9ff; --muted: #9aa0c3;
+      --accent: #6c8cff; --success: #2ecc71; --error: #ff5c7a; --focus: #a1b4ff;
+      --shadow: 0 10px 30px rgba(0,0,0,.35); --radius: 16px;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background: radial-gradient(1000px 600px at 10% -10%, rgba(108,140,255,.18), transparent 60%), var(--bg);
+      color:var(--text); display:grid; place-items:center; padding:24px;
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
+                  linear-gradient(135deg, rgba(108,140,255,.08), transparent 40%),
+                  var(--card);
+      border:1px solid rgba(255,255,255,.08); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:24px; max-width:880px; width:100%;
+    }
+    .header{display:flex; gap:16px; align-items:center; margin-bottom:18px}
+    .badge{background:rgba(108,140,255,.12); color:var(--accent); border:1px solid rgba(108,140,255,.3);
+      padding:6px 10px; border-radius:999px; font-size:12px; letter-spacing:.5px; text-transform:uppercase}
+    h1{margin:0; font-size:22px; font-weight:700; letter-spacing:.3px}
+    p{color:var(--muted); margin:8px 0 0}
+    .grid{display:grid; grid-template-columns:1fr; gap:24px; margin-top:18px}
+    @media(min-width:820px){ .grid{grid-template-columns:300px 1fr; align-items:start} }
+    .qr-wrap{background:rgba(255,255,255,.03); border:1px dashed rgba(255,255,255,.12); border-radius:12px; padding:18px; display:grid; place-items:center}
+    #qrcode canvas,#qrcode img{width:100% !important; height:auto !important; image-rendering:pixelated}
+    .content{display:grid; gap:16px}
+    .riddle{background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:16px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:15px; line-height:1.5}
+    .hint{margin-top:8px; font-size:14px; color:var(--muted); display:none}
+    .controls{display:flex; gap:10px; flex-wrap:wrap}
+    input[type="text"]{
+      flex:1 1 220px; min-width:180px; background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:12px 14px; color:var(--text);
+      outline:none; transition:border .2s, box-shadow .2s;
+    }
+    input[type="text"]:focus{border-color:var(--focus); box-shadow:0 0 0 4px rgba(161,180,255,.15)}
+    button{
+      background:linear-gradient(180deg, var(--accent), #5a77ff); color:white; border:none; border-radius:10px;
+      padding:12px 16px; cursor:pointer; font-weight:600; letter-spacing:.2px; box-shadow:0 6px 16px rgba(108,140,255,.35);
+      transition:transform .04s ease, filter .2s ease;
+    }
+    button.secondary{background:transparent; color:var(--accent); border:1px solid rgba(108,140,255,.4); box-shadow:none}
+    button:active{transform:translateY(1px)}
+    .msg{font-weight:600; margin-top:4px; min-height:22px}
+    .ok{color:var(--success)} .no{color:var(--error)}
+    .footer{margin-top:8px; font-size:12px; color:var(--muted); text-align:center}
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-labelledby="tytul">
+    <div class="header">
+      <span class="badge" aria-hidden="true">Łamigłówka</span>
+      <div>
+        <h1 id="tytul">Zaszyfrowane pytanie i kod QR</h1>
+        <p>Rozszyfruj pytanie, a potem podaj odpowiedź. QR prowadzi do niespodzianki.</p>
+      </div>
+    </div>
+
+    <section class="grid">
+      <div class="qr-wrap" aria-label="Kod QR">
+        <div id="qrcode" aria-hidden="false"></div>
+      </div>
+
+      <div class="content">
+        <div class="riddle" aria-live="polite">
+          <strong>Zagadka:</strong>
+          <p>Odszyfruj najpierw Morse’a, potem GA-DE-RY-PO-LU-KI. Wynik to pytanie.</p>
+          <pre id="cipher" class="mono" aria-label="Tekst zagadki"></pre>
+          <div class="hint" id="podpowiedz">
+            Podpowiedź: Kolejność odszyfrowania to: Morse → GA-DE-RY-PO-LU-KI. Polskie znaki są bez ogonków, spacje = /.
+          </div>
+        </div>
+
+        <div class="controls">
+          <input id="odpowiedz" type="text" placeholder="Twoja odpowiedź (liczba)…" autocomplete="off" inputmode="numeric" />
+          <button id="sprawdz">Sprawdź</button>
+          <button id="pokazHint" class="secondary">Pokaż podpowiedź</button>
+        </div>
+        <div class="msg" id="komunikat" role="status" aria-live="polite"></div>
+
+        <div class="footer">
+          Po poprawnej odpowiedzi zeskanuj QR. Miłej zabawy!
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Biblioteka do generowania QR -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" crossorigin="anonymous"></script>
+  <script>
+    // ===== KONFIG =====
+    // Co ma zawierać QR (podmień na swój link / wiadomość):
+    const QR_TRESC = "https://przyklad.pl/nagroda"; // <- PODMIEŃ
+
+    // Pytanie (źródło) – z polskimi znakami, jak w poleceniu:
+    const PYTANIE_ORG = "Która to była pielgrzymka ZHR?";
+
+    // Poprawna odpowiedź:
+    const POPRAWNE = ["43"];
+
+    // Komunikaty:
+    const MSG_OK = "Brawo! To poprawna odpowiedź: 43. Zeskanuj teraz kod QR.";
+    const MSG_NO = "Nie tym razem. Spróbuj jeszcze raz.";
+
+    // ===== LOGIKA SZYFROWANIA =====
+    // Usuwanie polskich znaków
+    const stripDiacritics = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // Szyfr GA-DE-RY-PO-LU-KI (dwukierunkowo)
+    const GADERY = { G:"A", A:"G", D:"E", E:"D", R:"Y", Y:"R", P:"O", O:"P", L:"U", U:"L", K:"I", I:"K" };
+    const applyGadery = s => {
+      return s.split("").map(ch => {
+        const up = ch.toUpperCase();
+        if (GADERY[up]) {
+          const mapped = GADERY[up];
+          // zachowaj oryginalną wielkość (prosto: wielkie = wielkie, małe = małe)
+          return (ch === ch.toUpperCase()) ? mapped : mapped.toLowerCase();
+        }
+        return ch;
+      }).join("");
+    };
+
+    // Alfabet Morse'a (A-Z, 0-9, znak zapytania)
+    const MORSE = {
+      "A":".-", "B":"-...", "C":"-.-.", "D":"-..", "E":".", "F":"..-.", "G":"--.", "H":"....", "I":"..", "J":".---",
+      "K":"-.-", "L":".-..", "M":"--", "N":"-.", "O":"---", "P":".--.", "Q":"--.-", "R":".-.", "S":"...", "T":"-",
+      "U":"..-", "V":"...-", "W":".--", "X":"-..-", "Y":"-.--", "Z":"--..",
+      "0":"-----", "1":".----", "2":"..---", "3":"...--", "4":"....-", "5":".....",
+      "6":"-....", "7":"--...", "8":"---..", "9":"----.",
+      "?":"..--.."
+    };
+    const toMorse = s => {
+      return s.split(" ").map(word =>
+        word.split("").map(ch => {
+          const up = ch.toUpperCase();
+          return MORSE[up] || ""; // pomiń nieobsługiwane znaki
+        }).filter(Boolean).join(" ")
+      ).join(" / ");
+    };
+
+    // Szyfrujemy tak, by rozwiązujący musiał odszyfrować w kolejności: Morse -> GA-DE-RY-PO-LU-KI.
+    // To znaczy: najpierw kodujemy GA-DE-RY-PO-LU-KI, a wynik zamieniamy na Morse'a.
+    const pytanieBase = stripDiacritics(PYTANIE_ORG);
+    const poGadery = applyGadery(pytanieBase);
+    const morseFinal = toMorse(poGadery);
+
+    // Wstaw zagadkę
+    document.getElementById("cipher").textContent = morseFinal;
+
+    // ===== QR =====
+    const qrelem = document.getElementById("qrcode");
+    const qr = new QRCode(qrelem, {
+      text: QR_TRESC, width: 260, height: 260,
+      colorDark: "#ffffff", colorLight: "#161a2f",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+
+    // ===== SPRAWDZANIE ODPOWIEDZI =====
+    const input = document.getElementById("odpowiedz");
+    const msg = document.getElementById("komunikat");
+    const btn = document.getElementById("sprawdz");
+    const hintBtn = document.getElementById("pokazHint");
+    const hint = document.getElementById("podpowiedz");
+
+    function normalize(s){
+      return (s || "").toString().trim().replace(",", "."); // lekkie ułatwienie
+    }
+
+    function sprawdz(){
+      const val = normalize(input.value);
+      const jestOk = POPRAWNE.includes(val);
+      msg.textContent = jestOk ? MSG_OK : MSG_NO;
+      msg.className = "msg " + (jestOk ? "ok" : "no");
+      if (jestOk) {
+        qrelem.animate([{ transform:"scale(1)" }, { transform:"scale(1.04)" }, { transform:"scale(1)" }], { duration:280, easing:"ease-out" });
+      }
+    }
+
+    btn.addEventListener("click", sprawdz);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") sprawdz(); });
+    hintBtn.addEventListener("click", () => {
+      const visible = hint.style.display === "block";
+      hint.style.display = visible ? "none" : "block";
+      hintBtn.textContent = visible ? "Pokaż podpowiedź" : "Ukryj podpowiedź";
+    });
+  </script>
+</body>
+</html>
