@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Zagadka ZHR — Morse → GA-DE-RY-PO-LU-KI</title>
+  <title>Zagadka ZHR</title>
   <style>
     body {
       margin: 0;
@@ -71,7 +71,7 @@
 <body>
   <div class="card">
     <h1>🔐 Zaszyfrowane pytanie</h1>
-    <p class="lead">Najpierw odszyfruj Morse’a (litery = „/”, słowa = „//”), potem użyj szyfru GA-DE-RY-PO-LU-KI.</p>
+    <p class="lead">Odszyfruj Morse’a, a potem spróbuj odpowiedzieć.</p>
     <pre id="cipher"></pre>
 
     <div class="controls">
@@ -82,19 +82,14 @@
   </div>
 
   <script>
-    // ===== KONFIG =====
     const PYTANIE_ORG = "Która to była pielgrzymka ZHR?";
     const POPRAWNE = ["43"];
     const MSG_NO = "Nie tym razem. Spróbuj jeszcze raz.";
-
-    // Tekst po poprawnej odpowiedzi
     const TEKST_HTML = `Szukaj w postach 😉😉😉<br>
     Tu <a href="https://www.instagram.com/pielgrzymkazhr/" target="_blank" rel="noopener noreferrer">Instagram pielgrzymki</a>`;
 
-    // ===== FUNKCJE =====
     function normalizePolish(text) {
-      return text
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .replace(/ł/g,"l").replace(/Ł/g,"L")
         .replace(/ą/g,"a").replace(/Ą/g,"A")
         .replace(/ę/g,"e").replace(/Ę/g,"E")
@@ -118,45 +113,3 @@
 
     const MORSE = {
       "A":".-","B":"-...","C":"-.-.","D":"-..","E":".","F":"..-.","G":"--.","H":"....","I":"..","J":".---",
-      "K":"-.-","L":".-..","M":"--","N":"-.","O":"---","P":".--.","Q":"--.-","R":".-.","S":"...","T":"-",
-      "U":"..-","V":"...-","W":".--","X":"-..-","Y":"-.--","Z":"--..",
-      "0":"-----","1":".----","2":"..---","3":"...--","4":"....-","5":".....",
-      "6":"-....","7":"--...","8":"---..","9":"----.",
-      "?":"..--.."
-    };
-
-    function toMorse(text) {
-      return text.split(" ").map(word =>
-        word.split("").map(ch => {
-          const up = ch.toUpperCase();
-          return MORSE[up] || "";
-        }).filter(Boolean).join(" / ")
-      ).join(" // ");
-    }
-
-    // ===== Generowanie zagadki =====
-    const pytanieBase = normalizePolish(PYTANIE_ORG);
-    const poGadery = applyGadery(pytanieBase);
-    const morseFinal = toMorse(poGadery);
-    document.getElementById("cipher").textContent = morseFinal;
-
-    // ===== Sprawdzanie odpowiedzi =====
-    const input = document.getElementById("odpowiedz");
-    const msg = document.getElementById("komunikat");
-
-    function checkAnswer() {
-      const val = (input.value || "").trim();
-      if (POPRAWNE.includes(val)) {
-        msg.innerHTML = TEKST_HTML;
-        msg.className = "msg ok";
-      } else {
-        msg.textContent = MSG_NO;
-        msg.className = "msg no";
-      }
-    }
-
-    document.getElementById("sprawdz").addEventListener("click", checkAnswer);
-    input.addEventListener("keydown", e => { if (e.key === "Enter") checkAnswer(); });
-  </script>
-</body>
-</html>
