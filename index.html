@@ -113,3 +113,40 @@
 
     const MORSE = {
       "A":".-","B":"-...","C":"-.-.","D":"-..","E":".","F":"..-.","G":"--.","H":"....","I":"..","J":".---",
+      "K":"-.-","L":".-..","M":"--","N":"-.","O":"---","P":".--.","Q":"--.-","R":".-.","S":"...","T":"-",
+      "U":"..-","V":"...-","W":".--","X":"-..-","Y":"-.--","Z":"--..",
+      "0":"-----","1":".----","2":"..---","3":"...--","4":"....-","5":".....",
+      "6":"-....","7":"--...","8":"---..","9":"----.",
+      "?":"..--.."
+    };
+
+    function toMorse(text) {
+      return text.split(" ").map(word =>
+        word.split("").map(ch => MORSE[ch.toUpperCase()] || "")
+          .filter(Boolean).join(" / ")
+      ).join(" // ");
+    }
+
+    const pytanieBase = normalizePolish(PYTANIE_ORG);
+    const poGadery = applyGadery(pytanieBase);
+    document.getElementById("cipher").textContent = toMorse(poGadery);
+
+    const input = document.getElementById("odpowiedz");
+    const msg = document.getElementById("komunikat");
+
+    function checkAnswer() {
+      const val = (input.value || "").trim();
+      if (POPRAWNE.includes(val)) {
+        msg.innerHTML = TEKST_HTML;
+        msg.className = "msg ok";
+      } else {
+        msg.textContent = MSG_NO;
+        msg.className = "msg no";
+      }
+    }
+
+    document.getElementById("sprawdz").addEventListener("click", checkAnswer);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") checkAnswer(); });
+  </script>
+</body>
+</html>
